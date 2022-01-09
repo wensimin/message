@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "179722470987",
+    "project_id": "shali-fcm",
+    "storage_bucket": "shali-fcm.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:179722470987:android:16974fb5a263b8ba62afce",
+        "android_client_info": {
+          "package_name": "github.wensimin.message"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "179722470987-34gkouqn0bhcd25ic8ve9te577fflge2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJzBlIHteSOtTAbGtR9qM4GoQt4g9b-f4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "179722470987-34gkouqn0bhcd25ic8ve9te577fflge2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
