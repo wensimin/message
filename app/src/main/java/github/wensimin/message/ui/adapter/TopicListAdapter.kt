@@ -17,7 +17,6 @@ import org.springframework.http.HttpMethod
 
 class TopicListAdapter(private val context: MainActivity, items: List<Topic> = arrayListOf()) :
     ArrayAdapter<Topic>(context, 0, items) {
-    private val scope = MainScope()
 
     @SuppressLint("ViewHolder")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -37,17 +36,17 @@ class TopicListAdapter(private val context: MainActivity, items: List<Topic> = a
     }
 
     private fun register(topic: Topic) {
-        scope.launch(Dispatchers.IO) {
+        context.scope.launch(Dispatchers.IO) {
             val action = if (topic.subscribed) HttpMethod.DELETE else HttpMethod.PUT
-            val res = RestApi.buildTemplate().exchange(
-                "${RestApi.RESOURCE_SERVER}topic/${topic.id}",
+            val res = RestApi.exchange(
+                "topic/${topic.id}",
                 action,
                 null,
                 String::class.java
             )
-
-            logD("$action ${topic.id} ${res.body ?: "success"}")
+            logD("$action ${topic.id} ${res.error ?: "success"}")
             context.loadData()
         }
     }
+
 }

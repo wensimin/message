@@ -2,14 +2,19 @@ package github.wensimin.message.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import github.wensimin.message.Application.Companion.context
 import github.wensimin.message.R
+
 
 class FirebaseMessagingService : FirebaseMessagingService() {
 
@@ -30,12 +35,21 @@ class FirebaseMessagingService : FirebaseMessagingService() {
      * 通过data数据构建通知
      */
     private fun sendNotification(data: Map<String, String>) {
-        //TODO click导航
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.notification)
-            .setContentTitle(data["title"])
-            .setContentText(data["body"])
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .apply {
+                setSmallIcon(R.drawable.notification)
+                setContentTitle(data["title"])
+                setContentText(data["body"])
+                priority = NotificationCompat.PRIORITY_DEFAULT
+                setAutoCancel(true)
+                data["url"]?.let {
+                    val notificationIntent = Intent(Intent.ACTION_VIEW)
+                    notificationIntent.data = Uri.parse(it)
+                    val pi = PendingIntent.getActivity(context, 0, notificationIntent, 0)
+                    setContentIntent(pi)
+                }
+            }
+
         with(NotificationManagerCompat.from(this)) {
             // notificationId is a unique int for each notification that you must define
             notify(SystemClock.uptimeMillis().toInt(), builder.build())
@@ -51,6 +65,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val importance = NotificationManager.IMPORTANCE_HIGH
         val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
             description = descriptionText
+            enableLights(true)
         }
         // Register the channel with the system
         val notificationManager: NotificationManager =

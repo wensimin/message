@@ -8,12 +8,10 @@ import github.wensimin.message.rest.exception.AuthException
 import github.wensimin.message.rest.exception.SystemException
 import github.wensimin.message.rest.pojo.ErrorType
 import github.wensimin.message.rest.pojo.RestError
+import github.wensimin.message.rest.pojo.RestResponse
 import github.wensimin.message.utils.logE
 import github.wensimin.message.utils.toastShow
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import org.springframework.http.*
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.ClientHttpResponse
 import org.springframework.http.client.SimpleClientHttpRequestFactory
@@ -30,10 +28,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 /**
- * 已知问题如下
- *  error handler会将流close,导致后续读取不到数据会报错
- *  解决方案倾向于包装一层用于error handler
- *  现在业务太简单了先懒得折腾了
+ *  restTemplate 简单包装
  */
 object RestApi {
     private val context: android.app.Application = Application.context
@@ -43,7 +38,7 @@ object RestApi {
     private val jsonMapper: ObjectMapper
 
     //    private const val RESOURCE_SERVER: String = "https://boliboli.xyz:3000/message-rs"
-    const val RESOURCE_SERVER: String = "http://192.168.0.201:8080/message-rs/"
+    private const val RESOURCE_SERVER: String = "http://192.168.0.201:8080/message-rs/"
 
     init {
         converters.apply {
@@ -76,7 +71,7 @@ object RestApi {
             override fun handleError(response: ClientHttpResponse) {
                 when (response.statusCode) {
                     HttpStatus.UNAUTHORIZED, HttpStatus.BAD_REQUEST -> {
-                        errorHandler(AuthException())
+                        throw AuthException()
                     }
                     else -> {
                         throwError(response.body)
@@ -91,12 +86,10 @@ object RestApi {
      */
     private fun throwError(body: InputStream?) {
         val restError = jsonMapper.readValue(body, RestError::class.java)
-        errorHandler(
-            //处理刷新token过期
-            if (restError.error == "invalid_grant") AuthException() else SystemException(
-                restError.error ?: ErrorType.ERROR.name,
-                restError.message ?: "未知错误"
-            )
+        //处理刷新token过期
+        throw if (restError.error == "invalid_grant") AuthException() else SystemException(
+            restError.error ?: ErrorType.ERROR.name,
+            restError.message ?: "未知错误"
         )
     }
 
@@ -143,6 +136,26 @@ object RestApi {
                 }
                 execution.execute(request, body)
             })
+        }
+    }
+
+    fun <O> exchange(
+        endpoint: String,
+        method: HttpMethod = HttpMethod.GET,
+        body: Any? = null,
+        responseType: Class<O>
+    ): RestResponse<O> {
+        return try {
+            val res = buildTemplate().exchange(
+                RESOURCE_SERVER + endpoint,
+                method,
+                HttpEntity(body),
+                responseType
+            ).body
+            return RestResponse(res)
+        } catch (e: Exception) {
+            errorHandler(e)
+            RestResponse(null, e)
         }
     }
 

@@ -1,28 +1,29 @@
 package github.wensimin.message
 
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
-import github.wensimin.message.utils.logD
 import github.wensimin.message.manager.RestApi
 import github.wensimin.message.manager.TokenManager
 import github.wensimin.message.manager.TokenStatus
 import github.wensimin.message.pojo.Topic
 import github.wensimin.message.ui.adapter.TopicListAdapter
+import github.wensimin.message.utils.logD
 import github.wensimin.message.utils.logI
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.springframework.http.HttpMethod
 
 class MainActivity : AppCompatActivity() {
     private lateinit var tokenManager: TokenManager
-    private val scope = MainScope()
+    val scope = MainScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -37,7 +38,6 @@ class MainActivity : AppCompatActivity() {
             })
         }
         updateToken()
-
     }
 
     private fun updateToken() {
@@ -50,15 +50,33 @@ class MainActivity : AppCompatActivity() {
             val token = task.result
             Log.d("FCM", token.toString())
             scope.launch(Dispatchers.IO) {
-                val res = RestApi.buildTemplate().exchange(
-                    "${RestApi.RESOURCE_SERVER}token/${token}",
-                    HttpMethod.PUT,
-                    null,
-                    String::class.java
+                val res = RestApi.exchange(
+                    endpoint = "token",
+                    method = HttpMethod.PUT,
+                    body = mapOf("id" to token, "deviceMessage" to getSystemDetail()),
+                    responseType = String::class.java
                 )
-                logI("token update ${res.body ?: "success"} value :$token")
+                logI("token update ${res.error ?: "success"} value :$token")
             }
         })
+    }
+
+
+    private fun getSystemDetail(): String {
+        return "Brand: ${Build.BRAND} \n" +
+                "Model: ${Build.MODEL} \n" +
+                "ID: ${Build.ID} \n" +
+                "SDK: ${Build.VERSION.SDK_INT} \n" +
+                "Manufacture: ${Build.MANUFACTURER} \n" +
+                "Brand: ${Build.BRAND} \n" +
+                "User: ${Build.USER} \n" +
+                "Type: ${Build.TYPE} \n" +
+                "Base: ${Build.VERSION_CODES.BASE} \n" +
+                "Incremental: ${Build.VERSION.INCREMENTAL} \n" +
+                "Board: ${Build.BOARD} \n" +
+                "Host: ${Build.HOST} \n" +
+                "FingerPrint: ${Build.FINGERPRINT} \n" +
+                "Version Code: ${Build.VERSION.RELEASE}"
     }
 
     override fun onResume() {
@@ -75,14 +93,18 @@ class MainActivity : AppCompatActivity() {
     fun loadData() {
         val topicList: ListView = findViewById(R.id.topicList)
         scope.launch(Dispatchers.IO) {
-            val topics = RestApi.buildTemplate()
-                .getForEntity(
-                    "${RestApi.RESOURCE_SERVER}topic",
-                    Array<Topic>::class.java
-                )
-            this@MainActivity.runOnUiThread {
-                topicList.adapter = TopicListAdapter(this@MainActivity, topics.body.toList())
+            val topics =
+                RestApi.exchange(endpoint = "topic", responseType = Array<Topic>::class.java)
+            topics.data?.let {
+                this@MainActivity.runOnUiThread {
+                    topicList.adapter = TopicListAdapter(this@MainActivity, it.toList())
+                }
             }
         }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 }
