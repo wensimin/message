@@ -37,8 +37,8 @@ object RestApi {
     private val clientHttpRequestFactory: SimpleClientHttpRequestFactory
     private val jsonMapper: ObjectMapper
 
-    //    private const val RESOURCE_SERVER: String = "https://boliboli.xyz:3000/message-rs"
-    private const val RESOURCE_SERVER: String = "http://192.168.0.201:8080/message-rs/"
+    private const val RESOURCE_SERVER: String = "https://boliboli.xyz:3000/message-rs"
+//    private const val RESOURCE_SERVER: String = "http://192.168.0.201:8080/message-rs/"
 
     init {
         converters.apply {
