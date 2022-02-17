@@ -51,8 +51,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             }
 
         with(NotificationManagerCompat.from(this)) {
-            // notificationId is a unique int for each notification that you must define
-            notify(SystemClock.uptimeMillis().toInt(), builder.build())
+            // 这里id使用时间hash 未来需要识别消息时会使用id hash
+            notify(SystemClock.uptimeMillis().hashCode(), builder.build())
         }
     }
 
