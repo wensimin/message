@@ -19,7 +19,7 @@ class TokenManager(
 ) {
     companion object {
         const val TOKEN_KEY = "TOKEN_KEY"
-        private const val OAUTH_SERVER: String = "https://boliboli.xyz:3000/authorization"
+        private const val OAUTH_SERVER: String = "https://shali.fun:3000/authorization"
 //        private const val OAUTH_SERVER: String = "http://192.168.0.201:81/authorization"
 
         private const val CLIENT_ID = "message-android"
