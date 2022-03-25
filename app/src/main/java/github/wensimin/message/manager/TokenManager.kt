@@ -37,7 +37,7 @@ class TokenManager(
             CLIENT_ID,  // Client ID
             ResponseTypeValues.CODE,
             Uri.parse("message://oauth2") // Redirect URI
-        ).setScope("openid") //scope
+        ).setScope("openid profile") //scope
             .build()
     }
 
