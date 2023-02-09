@@ -35,11 +35,13 @@ class FirebaseMessagingService : FirebaseMessagingService() {
      * 通过data数据构建通知
      */
     private fun sendNotification(data: Map<String, String>) {
+        val title = data["title"]
+        val body = data["body"]
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .apply {
                 setSmallIcon(R.drawable.notification)
-                setContentTitle(data["title"])
-                setContentText(data["body"])
+                setContentTitle(title)
+                setContentText(body)
                 priority = NotificationCompat.PRIORITY_DEFAULT
                 setAutoCancel(true)
                 data["url"]?.let {
@@ -49,7 +51,12 @@ class FirebaseMessagingService : FirebaseMessagingService() {
                     setContentIntent(pi)
                 }
             }
-
+        //创建大文本样式
+        val bigTextStyle = NotificationCompat.BigTextStyle()
+        bigTextStyle.setBigContentTitle(title)
+            .setSummaryText(body)
+            .bigText(body)
+        builder.setStyle(bigTextStyle) //设置大文本样式
         with(NotificationManagerCompat.from(this)) {
             // 这里id使用时间hash 未来需要识别消息时会使用id hash
             notify(SystemClock.uptimeMillis().hashCode(), builder.build())
